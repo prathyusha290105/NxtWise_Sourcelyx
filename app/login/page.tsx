@@ -28,7 +28,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const user = await authService.login(email, password);
+      const user = await authService.signIn(email, password);
       if (!user) {
         setError('Invalid credentials. Use any of the listed demo emails with password: ' + DEMO_PASSWORD);
         setIsLoading(false);

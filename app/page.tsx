@@ -375,7 +375,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <div>© 2026 Sourcelyx Technologies. All rights reserved. Configured for PostgreSQL + Prisma migration.</div>
+            <div>© 2026 Sourcelyx Technologies. All rights reserved. Configured with Firebase for authentication and data management.</div>
             <div className="flex items-center gap-6">
               <span>Privacy Policy</span>
               <span>Terms of Service</span>

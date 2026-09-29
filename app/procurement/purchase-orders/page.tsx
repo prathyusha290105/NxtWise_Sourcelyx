@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AppShell } from '../../../components/AppShell';
 import { useApp } from '../../../lib/context/AppContext';
-import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { Tabs } from '../../../components/ui/Tabs';
 import { Modal } from '../../../components/ui/Modal';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../../components/ui/Table';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../../components/ui/Table';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { PurchaseOrderDetailsModal } from '../../../components/PurchaseOrderDetailsModal';
 import { formatINR, formatDate } from '../../../lib/utils';
@@ -24,12 +30,9 @@ import {
   Send,
   Printer,
   Calendar,
-  Building2,
-  FileText,
-  Clock,
 } from 'lucide-react';
 
-export default function ProcurementPurchaseOrdersPage() {
+function ProcurementPurchaseOrdersPageContent() {
   const {
     purchaseOrders,
     quotations,
@@ -43,23 +46,34 @@ export default function ProcurementPurchaseOrdersPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
-  const [selectedPOForModal, setSelectedPOForModal] = useState<PurchaseOrder | null>(null);
+  const [selectedPOForModal, setSelectedPOForModal] =
+    useState<PurchaseOrder | null>(null);
 
   // Generate PO Modal Form State
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState('');
+
   const [deliveryAddress, setDeliveryAddress] = useState(
     'Sourcelyx Enterprise Center, Cyber Tech Corridor, Bengaluru - 560103'
   );
+
   const [paymentTerms, setPaymentTerms] = useState('Net 30 days');
-  const [notes, setNotes] = useState('Deliveries accepted between 9 AM to 5 PM Monday-Friday.');
+
+  const [notes, setNotes] = useState(
+    'Deliveries accepted between 9 AM to 5 PM Monday-Friday.'
+  );
 
   // Eligible quotations (SELECTED quotations)
-  const selectedQuotations = quotations.filter((q) => q.status === 'SELECTED');
+  const selectedQuotations = quotations.filter(
+    (q) => q.status === 'SELECTED'
+  );
 
   useEffect(() => {
     if (generateFromQuoteId) {
-      const match = quotations.find((q) => q.id === generateFromQuoteId);
+      const match = quotations.find(
+        (q) => q.id === generateFromQuoteId
+      );
+
       if (match) {
         setSelectedQuoteId(match.id);
         setPaymentTerms(match.paymentTerms);
@@ -71,14 +85,17 @@ export default function ProcurementPurchaseOrdersPage() {
   const handleOpenGenerateModal = () => {
     if (selectedQuotations.length > 0) {
       const first = selectedQuotations[0];
+
       setSelectedQuoteId(first.id);
       setPaymentTerms(first.paymentTerms);
     }
+
     setIsGenerateModalOpen(true);
   };
 
   const handleGeneratePOSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!selectedQuoteId) return;
 
     const newPO = generatePurchaseOrder(selectedQuoteId, {
@@ -92,36 +109,59 @@ export default function ProcurementPurchaseOrdersPage() {
   };
 
   const tabs = [
-    { id: 'ALL', label: 'All Orders', count: purchaseOrders.length },
+    {
+      id: 'ALL',
+      label: 'All Orders',
+      count: purchaseOrders.length,
+    },
     {
       id: 'GENERATED',
       label: 'Draft / Generated',
-      count: purchaseOrders.filter((p) => p.status === 'GENERATED').length,
+      count: purchaseOrders.filter(
+        (p) => p.status === 'GENERATED'
+      ).length,
     },
     {
       id: 'SENT',
       label: 'Dispatched to Vendor',
-      count: purchaseOrders.filter((p) => p.status === 'SENT').length,
+      count: purchaseOrders.filter(
+        (p) => p.status === 'SENT'
+      ).length,
     },
     {
       id: 'ACKNOWLEDGED',
       label: 'Acknowledged',
-      count: purchaseOrders.filter((p) => p.status === 'ACKNOWLEDGED').length,
+      count: purchaseOrders.filter(
+        (p) => p.status === 'ACKNOWLEDGED'
+      ).length,
     },
     {
       id: 'COMPLETED',
       label: 'Fulfilled / Completed',
-      count: purchaseOrders.filter((p) => p.status === 'COMPLETED').length,
+      count: purchaseOrders.filter(
+        (p) => p.status === 'COMPLETED'
+      ).length,
     },
   ];
 
   const filteredPOs = purchaseOrders.filter((po) => {
-    const matchesTab = activeTab === 'ALL' || po.status === activeTab;
+    const matchesTab =
+      activeTab === 'ALL' || po.status === activeTab;
+
     const matchesSearch =
-      po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      po.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      po.purchaseRequestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      po.rfqNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      po.poNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      po.vendorName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      po.purchaseRequestNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      po.rfqNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
     return matchesTab && matchesSearch;
   });
 
@@ -141,7 +181,11 @@ export default function ProcurementPurchaseOrdersPage() {
       }
     >
       <div className="space-y-4">
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+        <Tabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="w-full sm:max-w-md">
@@ -152,6 +196,7 @@ export default function ProcurementPurchaseOrdersPage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
+
           <div className="text-xs text-slate-500">
             Showing <strong>{filteredPOs.length}</strong> purchase orders
           </div>
@@ -172,13 +217,18 @@ export default function ProcurementPurchaseOrdersPage() {
                 <TableHead>PO Number</TableHead>
                 <TableHead>Supplier / Vendor</TableHead>
                 <TableHead>Ref PR & RFQ</TableHead>
-                <TableHead className="text-right">Order Amount</TableHead>
+                <TableHead className="text-right">
+                  Order Amount
+                </TableHead>
                 <TableHead>Target Delivery</TableHead>
                 <TableHead>Order Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">
+                  Actions
+                </TableHead>
               </tr>
             </TableHeader>
+
             <TableBody>
               {filteredPOs.map((po) => (
                 <TableRow key={po.id}>
@@ -187,60 +237,97 @@ export default function ProcurementPurchaseOrdersPage() {
                       {po.poNumber}
                     </span>
                   </TableCell>
+
                   <TableCell>
-                    <div className="font-bold text-slate-900 text-xs">{po.vendorName}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">GSTIN: {po.vendorGst}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs font-mono">
-                      <span className="text-indigo-700 font-medium">{po.purchaseRequestNumber}</span>
-                      <span className="text-slate-400 mx-1">•</span>
-                      <span className="text-slate-600">{po.rfqNumber}</span>
+                    <div className="font-bold text-slate-900 text-xs">
+                      {po.vendorName}
+                    </div>
+
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      GSTIN: {po.vendorGst}
                     </div>
                   </TableCell>
+
+                  <TableCell>
+                    <div className="text-xs font-mono">
+                      <span className="text-indigo-700 font-medium">
+                        {po.purchaseRequestNumber}
+                      </span>
+
+                      <span className="text-slate-400 mx-1">
+                        •
+                      </span>
+
+                      <span className="text-slate-600">
+                        {po.rfqNumber}
+                      </span>
+                    </div>
+                  </TableCell>
+
                   <TableCell className="text-right font-mono font-bold text-xs text-slate-900">
                     {formatINR(po.totalAmount)}
                   </TableCell>
+
                   <TableCell>
                     <span className="text-xs text-slate-700 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       {formatDate(po.deliveryDate)}
                     </span>
                   </TableCell>
+
                   <TableCell>
-                    <span className="text-xs text-slate-500">{formatDate(po.orderDate)}</span>
+                    <span className="text-xs text-slate-500">
+                      {formatDate(po.orderDate)}
+                    </span>
                   </TableCell>
+
                   <TableCell>
                     <StatusBadge status={po.status} />
                   </TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setSelectedPOForModal(po)}
-                        leftIcon={<Eye className="w-3.5 h-3.5" />}
+                        onClick={() =>
+                          setSelectedPOForModal(po)
+                        }
+                        leftIcon={
+                          <Eye className="w-3.5 h-3.5" />
+                        }
                       >
                         View
                       </Button>
+
                       {po.status === 'GENERATED' && (
                         <Button
                           size="sm"
                           variant="primary"
-                          onClick={() => sendPurchaseOrder(po.id)}
-                          leftIcon={<Send className="w-3.5 h-3.5" />}
+                          onClick={() =>
+                            sendPurchaseOrder(po.id)
+                          }
+                          leftIcon={
+                            <Send className="w-3.5 h-3.5" />
+                          }
                         >
                           Send
                         </Button>
                       )}
+
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
                           setSelectedPOForModal(po);
-                          setTimeout(() => window.print(), 200);
+
+                          setTimeout(() => {
+                            window.print();
+                          }, 200);
                         }}
-                        leftIcon={<Printer className="w-3.5 h-3.5" />}
+                        leftIcon={
+                          <Printer className="w-3.5 h-3.5" />
+                        }
                       >
                         Print
                       </Button>
@@ -270,7 +357,10 @@ export default function ProcurementPurchaseOrdersPage() {
         description="Select an awarded supplier quotation to issue a binding legal purchase contract"
         maxWidth="lg"
       >
-        <form onSubmit={handleGeneratePOSubmit} className="space-y-4 text-xs">
+        <form
+          onSubmit={handleGeneratePOSubmit}
+          className="space-y-4 text-xs"
+        >
           <div>
             <Select
               label="Awarded Supplier Quotation"
@@ -278,17 +368,32 @@ export default function ProcurementPurchaseOrdersPage() {
               value={selectedQuoteId}
               onChange={(e) => {
                 const qId = e.target.value;
+
                 setSelectedQuoteId(qId);
-                const q = quotations.find((quo) => quo.id === qId);
-                if (q) setPaymentTerms(q.paymentTerms);
+
+                const q = quotations.find(
+                  (quo) => quo.id === qId
+                );
+
+                if (q) {
+                  setPaymentTerms(q.paymentTerms);
+                }
               }}
               options={
                 selectedQuotations.length > 0
                   ? selectedQuotations.map((q) => ({
                       value: q.id,
-                      label: `${q.quotationNumber} — ${q.vendorName} (${formatINR(q.totalAmount)}) for ${q.rfqNumber}`,
+                      label: `${q.quotationNumber} — ${q.vendorName} (${formatINR(
+                        q.totalAmount
+                      )}) for ${q.rfqNumber}`,
                     }))
-                  : [{ value: '', label: 'No SELECTED quotations available. Award an RFQ first.' }]
+                  : [
+                      {
+                        value: '',
+                        label:
+                          'No SELECTED quotations available. Award an RFQ first.',
+                      },
+                    ]
               }
             />
           </div>
@@ -298,7 +403,9 @@ export default function ProcurementPurchaseOrdersPage() {
               label="Delivery Destination Address"
               required
               value={deliveryAddress}
-              onChange={(e) => setDeliveryAddress(e.target.value)}
+              onChange={(e) =>
+                setDeliveryAddress(e.target.value)
+              }
             />
           </div>
 
@@ -307,7 +414,9 @@ export default function ProcurementPurchaseOrdersPage() {
               label="Agreed Payment Terms"
               required
               value={paymentTerms}
-              onChange={(e) => setPaymentTerms(e.target.value)}
+              onChange={(e) =>
+                setPaymentTerms(e.target.value)
+              }
             />
           </div>
 
@@ -320,15 +429,25 @@ export default function ProcurementPurchaseOrdersPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-            <Button variant="outline" size="sm" type="button" onClick={() => setIsGenerateModalOpen(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={() =>
+                setIsGenerateModalOpen(false)
+              }
+            >
               Cancel
             </Button>
+
             <Button
               size="sm"
               variant="primary"
               type="submit"
               disabled={!selectedQuoteId}
-              leftIcon={<FileCheck2 className="w-4 h-4" />}
+              leftIcon={
+                <FileCheck2 className="w-4 h-4" />
+              }
             >
               Generate PO (PO-2026-...)
             </Button>
@@ -336,5 +455,13 @@ export default function ProcurementPurchaseOrdersPage() {
         </form>
       </Modal>
     </AppShell>
+  );
+}
+
+export default function ProcurementPurchaseOrdersPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProcurementPurchaseOrdersPageContent />
+    </Suspense>
   );
 }

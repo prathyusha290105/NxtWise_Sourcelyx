@@ -1,10 +1,68 @@
+import { onSnapshot, orderBy, query } from 'firebase/firestore';
 import { PurchaseOrder } from '../lib/types';
-import { INITIAL_PURCHASE_ORDERS } from '../lib/mock-data/purchaseOrders';
+import { COLLECTIONS } from '../lib/firestore/constants';
+import {
+  col,
+  getById,
+  listAll,
+  setById,
+  withId,
+} from '../lib/firestore/helpers';
 
 export const purchaseOrderService = {
-  getAll: (): PurchaseOrder[] => INITIAL_PURCHASE_ORDERS,
-  getById: (id: string): PurchaseOrder | undefined =>
-    INITIAL_PURCHASE_ORDERS.find((po) => po.id === id),
-  getByVendor: (vendorId: string): PurchaseOrder[] =>
-    INITIAL_PURCHASE_ORDERS.filter((po) => po.vendorId === vendorId),
+  getAll: (): Promise<PurchaseOrder[]> =>
+    listAll<PurchaseOrder>(
+      COLLECTIONS.purchaseOrders
+    ),
+
+  getById: (
+    id: string
+  ): Promise<PurchaseOrder | null> =>
+    getById<PurchaseOrder>(
+      COLLECTIONS.purchaseOrders,
+      id
+    ),
+
+  getByVendor: async (
+    vendorId: string
+  ): Promise<PurchaseOrder[]> => {
+    const all = await listAll<PurchaseOrder>(
+      COLLECTIONS.purchaseOrders
+    );
+
+    return all.filter(
+      (po) => po.vendorId === vendorId
+    );
+  },
+
+  upsert: (
+    purchaseOrder: PurchaseOrder
+  ): Promise<void> =>
+    setById(
+      COLLECTIONS.purchaseOrders,
+      purchaseOrder.id,
+      { ...purchaseOrder }
+    ),
+
+  subscribeAll: (
+    onData: (rows: PurchaseOrder[]) => void,
+    onError?: (error: Error) => void
+  ): (() => void) => {
+    const q = query(
+      col(COLLECTIONS.purchaseOrders),
+      orderBy('orderDate', 'desc')
+    );
+
+    return onSnapshot(
+      q,
+      (snap) => {
+        onData(
+          snap.docs.map((doc) =>
+            withId<PurchaseOrder>(doc)
+          )
+        );
+      },
+      (error) => onError?.(error)
+    );
+  },
 };

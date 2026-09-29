@@ -1,19 +1,56 @@
-import { PurchaseRequest, PurchaseRequestStatus } from '../lib/types';
-import { INITIAL_PURCHASE_REQUESTS } from '../lib/mock-data/purchaseRequests';
+import { onSnapshot, orderBy, query } from 'firebase/firestore';
+import { PurchaseRequest } from '../lib/types';
+import { COLLECTIONS } from '../lib/firestore/constants';
+import {
+  col,
+  getById,
+  listAll,
+  setById,
+  withId,
+} from '../lib/firestore/helpers';
 
 export const purchaseRequestService = {
-  getAll: (statusFilter?: PurchaseRequestStatus | 'ALL'): PurchaseRequest[] => {
-    if (!statusFilter || statusFilter === 'ALL') {
-      return INITIAL_PURCHASE_REQUESTS;
-    }
-    return INITIAL_PURCHASE_REQUESTS.filter((pr) => pr.status === statusFilter);
-  },
+  getAll: (): Promise<PurchaseRequest[]> =>
+    listAll<PurchaseRequest>(
+      COLLECTIONS.purchaseRequests
+    ),
 
-  getById: (id: string): PurchaseRequest | undefined => {
-    return INITIAL_PURCHASE_REQUESTS.find((pr) => pr.id === id);
-  },
+  getById: (
+    id: string
+  ): Promise<PurchaseRequest | null> =>
+    getById<PurchaseRequest>(
+      COLLECTIONS.purchaseRequests,
+      id
+    ),
 
-  getByDepartment: (departmentId: string): PurchaseRequest[] => {
-    return INITIAL_PURCHASE_REQUESTS.filter((pr) => pr.departmentId === departmentId);
+  upsert: (
+    pr: PurchaseRequest
+  ): Promise<void> =>
+    setById(
+      COLLECTIONS.purchaseRequests,
+      pr.id,
+      { ...pr }
+    ),
+
+  subscribeAll: (
+    onData: (rows: PurchaseRequest[]) => void,
+    onError?: (error: Error) => void
+  ): (() => void) => {
+    const q = query(
+      col(COLLECTIONS.purchaseRequests),
+      orderBy('createdAt', 'desc')
+    );
+
+    return onSnapshot(
+      q,
+      (snap) => {
+        onData(
+          snap.docs.map((doc) =>
+            withId<PurchaseRequest>(doc)
+          )
+        );
+      },
+      (error) => onError?.(error)
+    );
   },
 };

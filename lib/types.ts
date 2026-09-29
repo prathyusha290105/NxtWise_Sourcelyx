@@ -16,6 +16,8 @@ export interface User {
   vendorId?: string;
   avatar?: string;
   title?: string;
+  /** Mock-era id such as usr-admin; not used as the Firestore document id. */
+  legacyId?: string;
 }
 
 export interface Department {
@@ -79,6 +81,8 @@ export interface Vendor {
   documents: VendorDocument[];
   performance?: VendorPerformance;
   category?: string;
+  /** Firebase Auth UID of the vendor portal user, when linked. */
+  ownerUid?: string;
 }
 
 export type PurchaseRequestPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -161,6 +165,8 @@ export interface RFQ {
   paymentTerms: string;
   status: RFQStatus;
   invitedVendors: RFQVendorInvite[];
+  /** Duplicate of invited vendor ids for Firestore security rules. */
+  invitedVendorIds?: string[];
   quotationCount: number;
   createdAt: string;
   createdBy: string;

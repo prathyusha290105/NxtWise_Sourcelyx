@@ -1,19 +1,21 @@
-import { Vendor, VendorStatus } from '../lib/types';
-import { INITIAL_VENDORS } from '../lib/mock-data/vendors';
+import { onSnapshot } from 'firebase/firestore';
+import { Vendor } from '../lib/types';
+import { COLLECTIONS } from '../lib/firestore/constants';
+import { col, getById, setById, withId } from '../lib/firestore/helpers';
 
 export const vendorService = {
-  getVendors: (statusFilter?: VendorStatus | 'ALL'): Vendor[] => {
-    if (!statusFilter || statusFilter === 'ALL') {
-      return INITIAL_VENDORS;
-    }
-    return INITIAL_VENDORS.filter((v) => v.status === statusFilter);
-  },
+  getById: (id: string) => getById<Vendor>(COLLECTIONS.vendors, id),
 
-  getVendorById: (id: string): Vendor | undefined => {
-    return INITIAL_VENDORS.find((v) => v.id === id);
-  },
+  upsert: (vendor: Vendor) => setById(COLLECTIONS.vendors, vendor.id, { ...vendor }),
 
-  getActiveVendors: (): Vendor[] => {
-    return INITIAL_VENDORS.filter((v) => v.status === 'ACTIVE');
+  subscribeAll: (
+    onData: (rows: Vendor[]) => void,
+    onError?: (error: Error) => void
+  ): (() => void) => {
+    return onSnapshot(
+      col(COLLECTIONS.vendors),
+      (snap) => onData(snap.docs.map((d) => withId<Vendor>(d))),
+      (err) => onError?.(err)
+    );
   },
 };
